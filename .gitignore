@@ -1,0 +1,68 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+
+# Flask instance folder (used for config, uploaded files)
+instance/
+
+# Flask cache and session files
+*.log
+*.pot
+*.mo
+
+# PyInstaller
+*.manifest
+*.spec
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pytest
+.cache/
+
+# coverage reports
+.coverage
+htmlcov/
+coverage.xml
+
+# virtualenv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# SQLite database
+*.sqlite3
+# *.db
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# dotenv environment variables
+.env

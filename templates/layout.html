@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title%}{%endblock%}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    
+    <main>
+    <div class="container">
+        <h2>{% block heading %}{%endblock%}</h2>
+        <div class="login">
+            <form action="{{action}}" method="post">
+                <label for="email">Email: <input type="email" placeholder="enter your email" name="email" required></label>
+                <label for="password">password: <input type="password" placeholder="enter your password" name="password" required></label>
+                <p style="color: red;">{{error}}</p>
+                {% block body %}
+                {%endblock%}
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>

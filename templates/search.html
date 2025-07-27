@@ -1,0 +1,31 @@
+{% extends "layout_main.html" %}
+
+{% block body %}
+  <section class="section">
+    <h2>Search Results</h2>
+
+    {% if results %}
+      <div class="movie-grid">
+        {% for movie in results %}
+          <div class="moviecard">
+            <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" />
+            <h3>{{ movie.title }}</h3>
+
+            {% if movie.id in watchlist_ids %}
+              <p class="watchlist-status">✅ In Watchlist</p>
+            {% else %}
+              <form action="/addtowatchlist" method="POST">
+                <input type="hidden" name="movie_id" value="{{ movie.id }}">
+                <input type="hidden" name="title" value="{{ movie.title }}">
+                <input type="hidden" name="poster" value="{{ movie.poster }}">
+                <button type="submit" class="watchlist-btn">Add to Watchlist</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No movies found.</p>
+    {% endif %}
+  </section>
+{% endblock %}

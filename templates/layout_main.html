@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Movie Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}" />
+</head>
+<body>
+
+  <nav>
+    <div class="logo">🎬 MovieTracker</div>
+
+    <!-- Menu toggle for mobile -->
+    <input type="checkbox" id="menu-toggle" class="menu-toggle-checkbox" />
+    <label for="menu-toggle" class="menu-toggle-label">☰</label>
+
+    <ul class="nav-links">
+      <li class="search-nav">
+        <!-- search -->
+        <form class="search-form" action="/search"  method="GET">
+          <input type="text" name="query" id="search-nav" placeholder="Search movies..." required />
+          <button type="submit">Search</button>
+        </form>
+      </li>
+      <li><a href="/">Home</a></li>
+      
+      <li><a href="/">Already Watched</a></li>
+      <li><a href="/">Watchlist</a></li>
+      {% if 'email' in session %}
+          <li>
+            <a href="/logout"><img id="profile" src="{{ url_for('static', filename='profile.png') }}" alt="profile" class="profile-img" /></a>
+          </li>
+      {% else %}
+          <li>
+            <a class="login" href="/login">Login</a>
+          </li>
+      {% endif %}
+
+    </ul>
+  </nav>
+  {%block body%}
+  {%endblock%}
+</body>
+
+</html>

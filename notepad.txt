@@ -1,0 +1,215 @@
+from flask import Flask,render_template,request,redirect,session
+from api import search_movies
+import sqlite3
+
+app=Flask(__name__)
+app.secret_key = "hello world"
+
+@app.route("/")
+def index():
+    watchlist = []
+
+    if 'email' in session:
+        try:
+            conn = sqlite3.connect('movies.db')
+            cursor = conn.cursor()
+
+            # Get user_id from email
+            cursor.execute("SELECT id FROM loginInfo WHERE email = ?", (session['email'],))
+            user_row = cursor.fetchone()
+            if user_row:
+                user_id = user_row[0]
+
+                # Get watchlist movies for this user
+                cursor.execute("""
+                    SELECT title, poster FROM movie
+                    WHERE watchlist = 1 AND user_id = ?
+                """, (user_id,))
+                watchlist = cursor.fetchall()
+        except Exception as e:
+            return render_template("error.html", error="Failed to load watchlist: " + str(e))
+        finally:
+            conn.close()
+
+    return render_template("home.html", watchlist=watchlist)
+
+@app.route("/login",methods=["GET","POST"])
+def login():
+    if request.method=="POST":
+        try:
+            conn=sqlite3.connect('movies.db')
+            cursor=conn.cursor()
+            Email=request.form.get('email')
+            Password=request.form.get("password")
+
+            cursor.execute("SELECT email,password FROM loginINfo WHERE email=? AND password=?",(Email,Password))
+            user=cursor.fetchone()
+
+            if user:
+                session['email']=Email
+                return redirect("/")
+            else:
+                return render_template("login.html",error="Incorrect id or password",action="/login")
+        
+        except Exception as e:
+            error="something went wrong: " + str(e)
+            return render_template("error.html",error=error)
+        
+        finally:
+            conn.close()
+    else:
+        return render_template("login.html",action="/login")
+
+@app.route("/register", methods=["GET","POST"])
+def register():
+    if request.method=="POST":
+        try:
+            conn=sqlite3.connect('movies.db')
+            cursor=conn.cursor()
+            Email=request.form.get('email')
+            Password=request.form.get("password")
+
+            if not Email or not Password:
+                return render_template("register.html",action="/register", error="Need to enter both email and password")
+            
+            if  not Email.endswith("@gmail.com"):
+                return render_template("register.html",action="/register", error="Email must end with @gmail.com")
+
+            cursor.execute("INSERT INTO loginInfo(email,password) VALUES(?,?)",(Email,Password))
+            conn.commit()
+            return redirect("/login")
+        except Exception as e:
+            error="something went wrong: "+str(e)
+            return render_template("error.html",error=error)
+        finally:
+            conn.close()
+    
+    else:
+        return render_template("register.html")
+
+@app.route("/logout")
+def logout():
+    session.pop('email', None)
+    return redirect("/")
+
+@app.route("/search")    
+def search():
+    title = request.args.get("query")
+    conn = sqlite3.connect('movies.db')
+    cursor = conn.cursor()
+
+    results = []
+
+    # 1. Check if movie already exists in DB (regardless of user)
+    cursor.execute("SELECT * FROM movie WHERE title LIKE ?", ('%' + title + '%',))
+    local_results = cursor.fetchall()
+
+    if local_results:
+        for movie in local_results:
+            results.append({
+                "title": movie[2],
+                "poster": movie[1],
+                "id": movie[0]  # movie id from DB
+            })
+    else:
+        # 2. Fetch from API
+        api_results = search_movies(title)
+        for movie in api_results:
+            # Check if movie is already stored (exact title match)
+            cursor.execute("SELECT id FROM movie WHERE title = ? AND poster=?", (movie["title"],movie["poster"]))
+            if not cursor.fetchone():
+                cursor.execute("INSERT INTO movie (poster, title) VALUES (?, ?)", (movie["poster"], movie["title"]))
+                conn.commit()
+            
+            # Get ID after insert (or use SELECT to find it again)
+            cursor.execute("SELECT id FROM movie WHERE title = ?", (movie["title"],))
+            movie_id = cursor.fetchone()[0]
+
+            results.append({
+                "title": movie["title"],
+                "poster": movie["poster"],
+                "id": movie_id
+            })
+
+    conn.close()
+    return render_template("search.html", results=results)
+
+@app.route("/addtowatchlist", methods=["POST"])
+def addtowatchlist():
+    if 'email' not in session:
+        return redirect("/login")
+
+    movie_id = request.form.get("movie_id")
+
+    try:
+        conn = sqlite3.connect('movies.db')
+        cursor = conn.cursor()
+
+        # Get user_id from email
+        cursor.execute("SELECT id FROM loginInfo WHERE email = ?", (session['email'],))
+        user = cursor.fetchone()
+        if not user:
+            return redirect("/login")
+
+        user_id = user[0]
+
+        # Update movie to mark it as watchlist for this user
+        cursor.execute("""
+            UPDATE movie
+            SET watchlist = 1, user_id = ?
+            WHERE id = ?
+        """, (user_id, movie_id))
+        conn.commit()
+
+        return redirect("/")  # Redirect back to home to see updated watchlist
+
+    except Exception as e:
+        return render_template("error.html", error="Failed to add to watchlist: " + str(e))
+
+    finally:
+        conn.close()
+
+@app.route("/removefromwatchlist", methods=["POST"])
+def removefromwatchlist():
+    if 'email' not in session:
+        return redirect("/login")
+
+    movie_id = request.form.get("movie_id")
+
+    try:
+        conn = sqlite3.connect('movies.db')
+        cursor = conn.cursor()
+
+        # Get user_id
+        cursor.execute("SELECT id FROM loginInfo WHERE email = ?", (session['email'],))
+        user = cursor.fetchone()
+        if not user:
+            return redirect("/login")
+
+        user_id = user[0]
+
+        # Set watchlist = 0 for this movie and user
+        cursor.execute("""
+            UPDATE movie
+            SET watchlist = 0
+            WHERE id = ? AND user_id = ?
+        """, (movie_id, user_id))
+        conn.commit()
+
+        return redirect("/")  # Redirect back to home page to see changes
+
+    except Exception as e:
+        return render_template("error.html", error="Failed to remove from watchlist: " + str(e))
+
+    finally:
+        conn.close()
+
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+     
+     
+          
+
+

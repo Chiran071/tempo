@@ -1,0 +1,7 @@
+{%extends "layout.html"%}
+{%block title%}lOG IN{%endblock%}
+{%block heading%}LOG IN{%endblock%}
+{%block body%}
+    <label for="button"><button type="submit">LOG IN</button></label>
+    <label for="login" class="centertext">Don't have acccount? <a href="{{ url_for('register') }}">Register</a></label>
+{%endblock%}

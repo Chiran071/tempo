@@ -1,0 +1,32 @@
+{% extends "layout_main.html" %}
+{% block body %}
+  <section id="home" class="section">
+    <h2>Welcome to Movie Tracker</h2>
+    <p id="par">Track your favorite movies here.</p>
+    <form class="search-form big" action="/search" method="GET">
+      <input type="text" name="query" placeholder="Search movies..." required />
+      <button type="submit">Search</button>
+    </form>
+  </section>
+
+  <section id="watchlist">
+    <h3>Your Watchlist</h3>
+
+    {% if watchlist %}
+      <div class="movie-grid">
+        {% for movie in watchlist %}
+          <div class="moviecard">
+            <form action="/removefromwatchlist" method="POST">
+              <img src="{{ movie[2] }}" alt="{{ movie[1] }}" style="width:150px;">
+              <h3>{{ movie[1] }}</h3>
+              <input type="hidden" name="movie_id" value="{{ movie[0] }}">
+              <button type="submit" class="watchlist-btn">Remove</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="margin-top: 20px;">Your watchlist is empty.</p>
+    {% endif %}
+  </section>
+{% endblock %}
